@@ -2,8 +2,8 @@ PREFIX= /usr/local
 BINDIR= ${PREFIX}/bin
 MANDIR= ${PREFIX}/share/man
 
-CVSROOT= anoncvs@anoncvs.openbsd.org:/cvs
-#CVSROOT= anoncvs@anoncvs3.usa.openbsd.org:/cvs
+#CVSROOT= anoncvs@anoncvs.openbsd.org:/cvs
+CVSROOT= anoncvs@anoncvs3.usa.openbsd.org:/cvs
 
 ### sources from upstream
 
