@@ -1,4 +1,4 @@
-/* $OpenBSD: zsig.c,v 1.15 2017/07/11 23:52:05 tedu Exp $ */
+/* $OpenBSD: zsig.c,v 1.20 2025/05/20 01:03:56 tedu Exp $ */
 /*
  * Copyright (c) 2016 Marc Espie <espie@openbsd.org>
  *
@@ -160,6 +160,8 @@ copy_blocks(int fdout, int fdin, const char *sha, const char *endsha,
 			if (more == 0)
 				break;
 		}
+		if (n == 0)
+			break;
 		SHA512_256Data(buffer, n, output);
 		if (endsha - sha < SHA512_256_DIGEST_STRING_LENGTH-1)
 			errx(4, "signature truncated");
@@ -172,6 +174,8 @@ copy_blocks(int fdout, int fdin, const char *sha, const char *endsha,
 		if (n != bufsize)
 			break;
 	}
+	if (endsha != sha)
+		errx(4, "file truncated");
 	free(buffer);
 }
 
@@ -180,8 +184,8 @@ zverify(const char *pubkeyfile, const char *msgfile, const char *sigfile,
     const char *keytype)
 {
 	struct gzheader h;
-	size_t bufsize;
-	char *p, *meta;
+	size_t bufsize, len;
+	char *p;
 	uint8_t *bufend;
 	int fdin, fdout;
 
@@ -197,13 +201,13 @@ zverify(const char *pubkeyfile, const char *msgfile, const char *sigfile,
 	if (!(h.flg & FCOMMENT_FLAG))
 		errx(1, "unsigned gzip archive");
 	fake[8] = h.xflg;
+	len = h.endcomment-h.comment;
 
-	p = verifyzdata(h.comment, h.endcomment-h.comment, sigfile,
+	p = verifyzdata(h.comment, len, sigfile,
 	    pubkeyfile, keytype);
 
 	bufsize = MYBUFSIZE;
 
-	meta = p;
 #define BEGINS_WITH(x, y) memcmp((x), (y), sizeof(y)-1) == 0
 
 	while (BEGINS_WITH(p, "algorithm=SHA512/256") ||
@@ -216,14 +220,11 @@ zverify(const char *pubkeyfile, const char *msgfile, const char *sigfile,
 
 	if (*p != '\n')
 		errx(1, "invalid signature");
-	*(p++) = 0;
 
 	fdout = xopen(msgfile, O_CREAT|O_TRUNC|O_NOFOLLOW|O_WRONLY, 0666);
-	/* we don't actually copy the header, but put in a fake one with about
-	 * zero useful information.
-	 */
 	writeall(fdout, fake, sizeof fake, msgfile);
-	writeall(fdout, meta, p - meta, msgfile);
+	writeall(fdout, h.comment, len+1, msgfile);
+	*(p++) = 0;
 	copy_blocks(fdout, fdin, p, h.endcomment, bufsize, bufend);
 	free(h.buffer);
 	close(fdout);
@@ -231,7 +232,8 @@ zverify(const char *pubkeyfile, const char *msgfile, const char *sigfile,
 }
 
 void
-zsign(const char *seckeyfile, const char *msgfile, const char *sigfile)
+zsign(const char *seckeyfile, const char *msgfile, const char *sigfile,
+    int skipdate)
 {
 	size_t bufsize = MYBUFSIZE;
 	int fdin, fdout;
@@ -261,14 +263,18 @@ zsign(const char *seckeyfile, const char *msgfile, const char *sigfile)
 
 	msg = xmalloc(space);
 	buffer = xmalloc(bufsize);
-	time(&clock);
+	if (skipdate) {
+		clock = 0;
+	} else {
+		time(&clock);
+	}
 	strftime(date, sizeof date, "%Y-%m-%dT%H:%M:%SZ", gmtime(&clock));
 	snprintf(msg, space,
 	    "date=%s\n"
 	    "key=%s\n"
 	    "algorithm=SHA512/256\n"
 	    "blocksize=%zu\n\n",
-	    date, seckeyfile, bufsize);
+	    date, check_keyname_compliance(NULL, seckeyfile), bufsize);
 	p = strchr(msg, 0);
 
 	while (1) {

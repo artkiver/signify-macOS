@@ -4,7 +4,10 @@ This macOS port of OpenBSD's `signify` utility intentionally tracks upstream
 OpenBSD sources directly, keeping only the smallest portability layer possible,
 with the explicit #1 goal of making it as easy to audit as possible.
 
-The latest version was tested on macOS 10.14.2 with Apple LLVM 9.1.0.
+The latest version was tested on:
+
+macOS 26.2 25C56 arm64
+Command Line Tools 26.2.0.0.1.1764812424
 
 Older versions were previously tested as far back as OS X 10.6.8 with GCC 4.2.1.
 
