@@ -6,8 +6,10 @@ with the explicit #1 goal of making it as easy to audit as possible.
 
 The latest version was tested on:
 
-macOS 26.2 25C56 arm64
-Command Line Tools 26.2.0.0.1.1764812424
+macOS 26.3.1 25D771280a arm64
+
+Command Line Tools 26.3.0.0.1.1771626560
+
 
 Older versions were previously tested as far back as OS X 10.6.8 with GCC 4.2.1.
 
@@ -32,11 +34,6 @@ this "port". It's only ~200 lines, you can do it :)
 If you prefer [MacPorts](https://www.macports.org/):
 ```
 $ sudo port install signify
-```
-
-If you prefer [Homebrew](http://brew.sh/):
-```
-$ brew install signify-osx
 ```
 
 ### Building it yourself
