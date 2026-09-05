@@ -6,10 +6,8 @@ with the explicit #1 goal of making it as easy to audit as possible.
 
 The latest version was tested on:
 
-macOS 26.3.1 25D771280a arm64
-
-Command Line Tools 26.3.0.0.1.1771626560
-
+macOS 26.6.2 25G83 arm64
+Xcode 26.6 17F113
 
 Older versions were previously tested as far back as OS X 10.6.8 with GCC 4.2.1.
 
